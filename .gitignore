@@ -1,0 +1,6 @@
+/target
+
+# Qdrant
+/qdrant_storage/
+/storage/
+/snapshots/
