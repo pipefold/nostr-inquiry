@@ -1,36 +1,25 @@
-use pinecone_sdk::models::{Cloud, DeletionProtection, IndexModel, Metric, Vector, WaitPolicy};
+use dotenv::dotenv;
+use pinecone_sdk::models::Vector;
+use std::env;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize the Pinecone client
-    // Note: Make sure to set PINECONE_API_KEY environment variable
-    let client =
-        pinecone_sdk::pinecone::default_client().expect("Failed to create Pinecone instance");
+    // Load environment variables from .env file
+    dotenv().ok();
 
-    // Create a new serverless index
-    let index_name = "test-index";
-    let dimension = 4; // Vector dimension size
+    // Get the API key from environment variables
+    let api_key =
+        env::var("PINECONE_API_KEY").expect("PINECONE_API_KEY must be set in environment");
 
-    println!("Creating index '{}'...", index_name);
-
-    let index: IndexModel = client
-        .create_serverless_index(
-            index_name,
-            dimension,
-            Metric::Cosine,
-            Cloud::Aws,
-            "us-east-1",
-            DeletionProtection::Disabled,
-            WaitPolicy::NoWait,
-        )
-        .await?;
-
-    println!("Index created successfully!");
-
-    // Wait a moment for the index to be ready
-    tokio::time::sleep(tokio::time::Duration::from_secs(30)).await;
+    // Initialize the Pinecone client with the API key
+    let config = pinecone_sdk::pinecone::PineconeClientConfig {
+        api_key: Some(api_key),
+        ..Default::default()
+    };
+    let client = config.client().expect("Failed to create Pinecone instance");
 
     // Get the index description to get the host
+    let index_name = "test-index"; // Replace with your existing index name
     let index_description = client.describe_index(index_name).await?;
 
     // Connect to the index
